@@ -1,4 +1,3 @@
-
 provider "google" {
   project = "auto-project1-461104"
   region  = "asia-south1"
