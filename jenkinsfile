@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+    environment {
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-key')
+        GIT_TOKEN = credentials('git-token')
+    }
+    stages {
+        stage('Git Checkout') {
+            steps {
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[url: 'https://github.com/sindhu202518/vm-creation.git', credentialsId: 'git-token']]
+                ])
+            }
+        }
+        stage('Terraform Init') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+        stage('Terraform Plan') {
+            steps {
+                sh 'terraform validate'
+                sh 'terraform plan -out=tfplan'
+            }
+        }
+        stage('Manual Approval') {
+            steps {
+                input message: 'Approve Terraform deployment?', ok: 'Proceed'
+            }
+        }
+        stage('Terraform Apply') {
+            steps {
+                sh 'terraform apply -auto-approve tfplan'
+            }
+        }
+    }
+}
